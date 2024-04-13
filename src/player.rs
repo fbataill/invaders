@@ -7,8 +7,8 @@ use crate::{
 use std::time::Duration;
 
 pub struct Player {
-    x: usize,
-    y: usize,
+    pub x: usize,
+    pub y: usize,
     shots: Vec<Shot>,
 }
 
@@ -32,7 +32,7 @@ impl Player {
     }
     pub fn shoot(&mut self) -> bool {
         if self.shots.len() < 2 {
-            self.shots.push(Shot::new(self.x, self.y - 1));
+            self.shots.push(Shot::new(self.x, self.y - 1, true));
             true
         } else {
             false

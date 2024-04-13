@@ -1,7 +1,10 @@
 use crate::{
     frame::{Drawable, Frame},
-    {NUM_COLS, NUM_ROWS},
+    player::Player,
+    shot::Shot,
+    NUM_COLS, NUM_ROWS,
 };
+use rand::prelude::*;
 use rusty_time::Timer;
 use std::{cmp::max, time::Duration};
 
@@ -16,6 +19,8 @@ pub struct Invaders {
     pub total_count: usize,
     move_timer: Timer,
     direction: i32,
+    shots: Vec<Shot>,
+    nb_shots: u8,
 }
 
 impl Invaders {
@@ -40,12 +45,25 @@ impl Invaders {
             total_count,
             move_timer: Timer::new(Duration::from_millis(2000)),
             direction: 1,
+            shots: Vec::new(),
+            nb_shots: 5,
         }
     }
     pub fn update(&mut self, delta: Duration) -> bool {
         self.move_timer.tick(delta);
+
+        // manage existing shoot
+        for shot in self.shots.iter_mut() {
+            shot.update(delta);
+        }
+        self.shots.retain(|shot| !shot.dead());
+
         if self.move_timer.finished() {
+            // shoot
+            self.shoot();
+
             self.move_timer.reset();
+
             let mut downwards = false;
             if self.direction == -1 {
                 let min_x = self.army.iter().map(|invader| invader.x).min().unwrap_or(0);
@@ -62,7 +80,8 @@ impl Invaders {
             }
             if downwards {
                 let new_duration = max(self.move_timer.duration().as_millis() - 250, 250);
-                self.move_timer.set_duration(Duration::from_millis(new_duration as u64));
+                self.move_timer
+                    .set_duration(Duration::from_millis(new_duration as u64));
                 for invader in self.army.iter_mut() {
                     invader.y += 1;
                 }
@@ -74,6 +93,19 @@ impl Invaders {
             return true;
         }
         false
+    }
+    fn shoot(&mut self) -> bool {
+        for _ in 1..self.nb_shots {
+            //randomly choose an alien to shot
+            let mut rng = thread_rng();
+            let alien_index = rng.gen_range(1..self.army.len());
+
+            let alien = &self.army[alien_index];
+
+            // make this alien shot
+            self.shots.push(Shot::new(alien.x, alien.y + 1, false));
+        }
+        true
     }
     pub fn all_killed(&self) -> bool {
         self.army.is_empty()
@@ -94,6 +126,17 @@ impl Invaders {
             0
         }
     }
+    pub fn kill_player(&mut self, player: &Player) -> bool {
+        let mut hit: bool = false;
+        for shot in self.shots.iter_mut() {
+            if !shot.exploding {
+                if shot.x == player.x && shot.y == player.y {
+                    hit = true;
+                }
+            }
+        }
+        return hit;
+    }
 }
 
 impl Default for Invaders {
@@ -113,6 +156,9 @@ impl Drawable for Invaders {
             } else {
                 '+'
             }
+        }
+        for shot in self.shots.iter() {
+            shot.draw(frame);
         }
     }
 }

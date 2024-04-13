@@ -1,19 +1,21 @@
-use crate::frame::{Drawable, Frame};
+use crate::{frame::{Drawable, Frame}, NUM_ROWS};
 use rusty_time::Timer;
 use std::time::Duration;
 
 pub struct Shot {
-    pub x: usize,
-    pub y: usize,
+    up_direction: bool,
     pub exploding: bool,
     timer: Timer,
+    pub x: usize,
+    pub y: usize,
 }
 
 impl Shot {
-    pub fn new(x: usize, y: usize) -> Self {
+    pub fn new(x: usize, y: usize, up_direction: bool) -> Self {
         Self {
             x,
             y,
+            up_direction,
             exploding: false,
             timer: Timer::new(Duration::from_millis(50)),
         }
@@ -21,8 +23,15 @@ impl Shot {
     pub fn update(&mut self, delta: Duration) {
         self.timer.tick(delta);
         if self.timer.finished() && !self.exploding {
-            if self.y > 0 {
-                self.y -= 1;
+            if self.up_direction == true {
+                if self.y > 0 {
+                    self.y -= 1;
+                }
+            }
+            else {
+                if self.y < NUM_ROWS {
+                    self.y += 1;
+                }
             }
             self.timer.reset();
         }
@@ -32,7 +41,7 @@ impl Shot {
         self.timer = Timer::new(Duration::from_millis(250));
     }
     pub fn dead(&self) -> bool {
-        (self.exploding && self.timer.finished()) || (self.y == 0)
+        (self.exploding && self.timer.finished()) || (self.y == 0) || (self.y == NUM_ROWS)
     }
 }
 

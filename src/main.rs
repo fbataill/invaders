@@ -127,14 +127,17 @@ fn main() -> Result<(), Box<dyn Error>> {
             audio.play("explode");
             score.add_points(hits);
         }
-        // Draw & render
 
+
+        // Draw & render
         let drawables: Vec<&dyn Drawable> = vec![&player, &invaders, &score, &level];
         for drawable in drawables {
             drawable.draw(&mut curr_frame);
         }
         let _ = render_tx.send(curr_frame);
         thread::sleep(Duration::from_millis(1));
+
+
 
         // Win or lose?
         if invaders.all_killed() {
@@ -145,6 +148,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             invaders = Invaders::new();
         } else if invaders.reached_bottom() {
             audio.play("lose");
+            reset_game(&mut in_menu, &mut player, &mut invaders);
+        } else if invaders.kill_player(&mut player) {
+            audio.play("lose");
+            in_menu = true;
             reset_game(&mut in_menu, &mut player, &mut invaders);
         }
     }
