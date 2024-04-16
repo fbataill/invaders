@@ -46,7 +46,7 @@ impl Invaders {
             move_timer: Timer::new(Duration::from_millis(2000)),
             direction: 1,
             shots: Vec::new(),
-            nb_shots: 5,
+            nb_shots: 3,
         }
     }
     pub fn update(&mut self, delta: Duration) -> bool {
@@ -95,7 +95,7 @@ impl Invaders {
         false
     }
     fn shoot(&mut self) -> bool {
-        for _ in 1..self.nb_shots {
+        for _ in 0..self.nb_shots {
             //randomly choose an alien to shot
             let mut rng = thread_rng();
             let alien_index = rng.gen_range(1..self.army.len());

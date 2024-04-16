@@ -3,7 +3,7 @@ use rusty_time::Timer;
 use std::time::Duration;
 
 pub struct Shot {
-    up_direction: bool,
+    player_shot: bool,
     pub exploding: bool,
     timer: Timer,
     pub x: usize,
@@ -11,19 +11,22 @@ pub struct Shot {
 }
 
 impl Shot {
-    pub fn new(x: usize, y: usize, up_direction: bool) -> Self {
+    pub fn new(x: usize, y: usize, player_shot: bool) -> Self {
         Self {
             x,
             y,
-            up_direction,
+            player_shot,
             exploding: false,
             timer: Timer::new(Duration::from_millis(50)),
         }
     }
-    pub fn update(&mut self, delta: Duration) {
+    pub fn update(&mut self, mut delta: Duration) {
+        if self.player_shot == false {
+            delta = delta/2;
+        }    
         self.timer.tick(delta);
         if self.timer.finished() && !self.exploding {
-            if self.up_direction == true {
+            if self.player_shot == true {
                 if self.y > 0 {
                     self.y -= 1;
                 }
@@ -47,6 +50,10 @@ impl Shot {
 
 impl Drawable for Shot {
     fn draw(&self, frame: &mut Frame) {
-        frame[self.x][self.y] = if self.exploding { '*' } else { '|' };
+        if self.player_shot == true {
+            frame[self.x][self.y] = if self.exploding { '*' } else { '|' };
+        } else {
+            frame[self.x][self.y] = if self.exploding { '*' } else { 'V' };
+        }
     }
 }
